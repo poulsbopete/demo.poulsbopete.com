@@ -1,14 +1,12 @@
 // OpenTelemetry JS SDK imports from ESM-friendly CDN
 // OpenTelemetry browser SDK imports via jsDelivr ESM bundles
-// OpenTelemetry SDK imports via unpkg.com with ESM support
-import { WebTracerProvider } from 'https://unpkg.com/@opentelemetry/sdk-trace-web@latest?module';
-import { ConsoleSpanExporter, SimpleSpanProcessor } from 'https://unpkg.com/@opentelemetry/sdk-trace-base@latest?module';
-import { OTLPTraceExporter } from 'https://unpkg.com/@opentelemetry/exporter-trace-otlp-http@latest?module';
-// YAML parsing will be loaded dynamically when needed
+// Direct OTLP HTTP simulation without OpenTelemetry SDK
+// TLS for cross-origin fetches must be allowed by target endpoint
 
-let tracer;
+// simulation state
 let intervalIds = [];
 let running = false;
+let configGlobal = {};
 
 const configEl = document.getElementById('config');
 const startBtn = document.getElementById('start');
@@ -25,27 +23,59 @@ function log(message) {
   logEl.scrollTop = logEl.scrollHeight;
 }
 
-function initTracer(config) {
-  // Initialize tracer provider for browser
-  const provider = new WebTracerProvider();
-  // Choose exporter instance
-  const exporter =
-    config.exporter === 'otlp'
-      ? new OTLPTraceExporter({ url: config.url, headers: config.headers || {} })
-      : new ConsoleSpanExporter();
-  // Attach span processor and register provider
-  provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
-  provider.register();
-  // Obtain tracer
-  tracer = provider.getTracer(config.serviceName || 'demo');
+// helper to generate random hex IDs
+function makeRandomId(bytes) {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr).map(b => ('00' + b.toString(16)).slice(-2)).join('');
 }
 
+// send a single span via OTLP HTTP
+async function sendSpan(type) {
+  const nowMs = Date.now();
+  const traceId = makeRandomId(16);
+  const spanId = makeRandomId(8);
+  const startTime = BigInt(nowMs) * BigInt(1e6);
+  const endTime = BigInt(nowMs + Math.random() * 500) * BigInt(1e6);
+  const span = {
+    traceId,
+    spanId,
+    name: `${type}-operation`,
+    kind: 1,
+    startTimeUnixNano: startTime.toString(),
+    endTimeUnixNano: endTime.toString(),
+    attributes: [{ key: 'component', value: { stringValue: type } }]
+  };
+  const body = {
+    resourceSpans: [{
+      resource: { attributes: [{ key: 'service.name', value: { stringValue: configGlobal.serviceName } }] },
+      scopeSpans: [{ scope: { name: configGlobal.serviceName }, spans: [span] }]
+    }]
+  };
+  try {
+    const res = await fetch(configGlobal.url, {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, configGlobal.headers || {}),
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      log(`Error sending span: ${res.status} ${res.statusText}`);
+    } else {
+      log(`Span sent: ${type}`);
+    }
+  } catch (e) {
+    log(`ERROR sending span: ${e.message}`);
+  }
+}
+
+// simulate one span, either via OTLP or console
 function simulate(type) {
-  const span = tracer.startSpan(`${type}-operation`);
-  setTimeout(() => {
-    span.end();
-    log(`Span ended: ${type}`);
-  }, Math.random() * 500);
+  if (configGlobal.exporter === 'otlp') {
+    sendSpan(type);
+  } else {
+    log(`Console span: ${type}`);
+    console.log(`Console span: ${type}`);
+  }
 }
 
 async function start() {
@@ -129,9 +159,9 @@ async function start() {
     log('Using flat config (assumed JSON)');
     config = cfg;
   }
-  log(`Initializing tracer: serviceName=${config.serviceName}, exporter=${config.exporter || 'console'}, url=${config.url || ''}`);
-  initTracer(config);
-  log('Tracer initialized');
+  // Save config for simulation
+  configGlobal = config;
+  log(`Configuration set: serviceName=${config.serviceName}, exporter=${config.exporter || 'console'}, url=${config.url || ''}`);
   running = true;
   startBtn.disabled = true;
   stopBtn.disabled = false;
