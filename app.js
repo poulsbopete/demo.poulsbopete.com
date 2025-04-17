@@ -141,9 +141,12 @@ async function start() {
     const exporterKey = tracePipeline.exporters[0];
     const exporterCfg = collector.exporters[exporterKey] || {};
     // Determine endpoint URL
+    // Determine endpoint URL, default to HTTPS unless tls.insecure is true
     let url = exporterCfg.endpoint || exporterCfg.url || '';
     if (url && !url.startsWith('http')) {
-      url = 'http://' + url;
+      const insecure = exporterCfg.tls && exporterCfg.tls.insecure === true;
+      const scheme = insecure ? 'http://' : 'https://';
+      url = scheme + url;
     }
     if (url && !url.includes('/v1/traces')) {
       url = url.replace(/\/$/, '') + '/v1/traces';

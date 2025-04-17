@@ -14,6 +14,8 @@ Run entirely in the browser; no build step required.
    - You can use a simple JSON snippet (with `serviceName`, `exporter`, `url`, etc.).
    - Or paste a full Collector YAML. The app will extract the first trace pipeline's exporter endpoint and headers automatically.
 4. Click **Start** to begin generating OpenTelemetry spans continuously.
+   - Note: the browser-based OTLP HTTP simulation requires the target endpoint to support CORS for POST requests. Many managed OTLP endpoints (e.g. Elastic Cloud ingest) may not allow direct browser access.
+     If you see network or CORS errors, run a Collector or proxy locally (for example on `http://localhost:4318`) and point the exporter URL to that.
 5. Use **Step** to generate a single OpenTelemetry span on demand.
 6. Click **Stop** to end the OpenTelemetry simulation.
 7. Alternatively, click **Init APM** to load and initialize the Elastic APM RUM agent using the JSON configuration. This will expose the agent API as `window.apm` in the browser console.
