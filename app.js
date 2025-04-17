@@ -1,6 +1,7 @@
 import { WebTracerProvider } from 'https://esm.sh/@opentelemetry/sdk-trace-web';
 import { ConsoleSpanExporter, SimpleSpanProcessor } from 'https://esm.sh/@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from 'https://esm.sh/@opentelemetry/exporter-trace-otlp-http';
+import { load } from 'https://esm.sh/js-yaml';
 
 let tracer;
 let intervalIds = [];
@@ -45,12 +46,48 @@ function simulate(type) {
 }
 
 function start() {
-  let config;
+  const raw = configEl.value.trim();
+  let cfg;
+  // Try JSON parse first, then YAML
   try {
-    config = JSON.parse(configEl.value);
-  } catch (e) {
-    alert('Invalid JSON configuration');
-    return;
+    cfg = JSON.parse(raw);
+  } catch (e1) {
+    try {
+      cfg = load(raw);
+    } catch (e2) {
+      alert('Invalid JSON or YAML configuration');
+      return;
+    }
+  }
+  let config;
+  // Detect Collector YAML config and extract exporter settings
+  if (cfg.service && cfg.service.pipelines && cfg.exporters) {
+    const collector = cfg;
+    const serviceName = collector.service.serviceName || 'demo';
+    const tracePipeline = collector.service.pipelines.traces;
+    if (!tracePipeline || !Array.isArray(tracePipeline.exporters) || tracePipeline.exporters.length === 0) {
+      alert('No trace pipeline/exporter found in Collector config');
+      return;
+    }
+    const exporterKey = tracePipeline.exporters[0];
+    const exporterCfg = collector.exporters[exporterKey] || {};
+    // Determine endpoint URL
+    let url = exporterCfg.endpoint || exporterCfg.url || '';
+    if (url && !url.startsWith('http')) {
+      url = 'http://' + url;
+    }
+    if (url && !url.includes('/v1/traces')) {
+      url = url.replace(/\/$/, '') + '/v1/traces';
+    }
+    config = {
+      serviceName,
+      exporter: 'otlp',
+      url,
+      headers: exporterCfg.headers || {},
+      interval: cfg.interval
+    };
+  } else {
+    config = cfg;
   }
   initTracer(config);
   running = true;
