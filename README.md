@@ -11,6 +11,7 @@ Run entirely in the browser; no build step required.
 3. Click **Start** to begin generating spans continuously.
 4. Use **Step** to generate a single span on demand.
 5. Click **Stop** to end the simulation.
+6. View simulation logs in the “Log” section below the controls. For exporter output or JS errors, open your browser’s developer console (F12).
 
 ## Files
 - `index.html` — main page UI

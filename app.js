@@ -47,20 +47,31 @@ function simulate(type) {
 
 function start() {
   const raw = configEl.value.trim();
+  // Clear previous logs and indicate start
+  logEl.innerHTML = '';
+  log('Starting simulation…');
+  log('Parsing configuration…');
   let cfg;
-  // Try JSON parse first, then YAML
+  let parsedAs = '';
   try {
     cfg = JSON.parse(raw);
+    parsedAs = 'JSON';
+    log('Configuration parsed as JSON');
   } catch (e1) {
+    log('Configuration not valid JSON, trying YAML…');
     try {
       cfg = load(raw);
+      parsedAs = 'YAML';
+      log('Configuration parsed as YAML');
     } catch (e2) {
-      alert('Invalid JSON or YAML configuration');
+      const msg = 'Invalid JSON or YAML configuration';
+      log(`ERROR: ${msg}`);
+      alert(msg);
       return;
     }
   }
   let config;
-  // Detect Collector YAML config and extract exporter settings
+  // Detect Collector config with service pipelines and exporters
   if (cfg.service && cfg.service.pipelines && cfg.exporters) {
     const collector = cfg;
     const serviceName = collector.service.serviceName || 'demo';
@@ -79,6 +90,8 @@ function start() {
     if (url && !url.includes('/v1/traces')) {
       url = url.replace(/\/$/, '') + '/v1/traces';
     }
+    log(`Detected Collector config: using exporter "${exporterKey}"`);
+    log(`Exporter endpoint: ${url}`);
     config = {
       serviceName,
       exporter: 'otlp',
@@ -87,9 +100,12 @@ function start() {
       interval: cfg.interval
     };
   } else {
+    log('Using flat config (assumed JSON)');
     config = cfg;
   }
+  log(`Initializing tracer: serviceName=${config.serviceName}, exporter=${config.exporter || 'console'}, url=${config.url || ''}`);
   initTracer(config);
+  log('Tracer initialized');
   running = true;
   startBtn.disabled = true;
   stopBtn.disabled = false;
