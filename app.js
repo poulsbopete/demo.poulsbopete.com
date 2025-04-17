@@ -250,15 +250,6 @@ initApmBtn.addEventListener('click', async () => {
       return;
     }
   }
-  // Optionally proxy APM server through CORS proxy
-  {
-    const cp = corsProxyEl.value.trim();
-    if (cp && apmConfig.serverUrl) {
-      const urlNoProto = apmConfig.serverUrl.replace(/^https?:\/\//, '');
-      apmConfig.serverUrl = cp.endsWith('/') ? cp + urlNoProto : cp + '/' + urlNoProto;
-      log(`APM server URL proxied via: ${apmConfig.serverUrl}`);
-    }
-  }
   try {
     // Apply CORS proxy for APM server if set in UI
     const cp = corsProxyEl.value.trim();
