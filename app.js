@@ -1,5 +1,5 @@
 import { WebTracerProvider } from 'https://esm.sh/@opentelemetry/sdk-trace-web';
-import { ConsoleSpanExporter, SimpleSpanProcessor } from 'https://esm.sh/@opentelemetry/sdk-trace-base';
+import { ConsoleSpanExporter, SimpleSpanProcessor, BasicTracerProvider } from 'https://esm.sh/@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from 'https://esm.sh/@opentelemetry/exporter-trace-otlp-http';
 // YAML parsing will be loaded dynamically when needed
 
@@ -23,16 +23,24 @@ function log(message) {
 }
 
 function initTracer(config) {
-  // Initialize WebTracerProvider for browser
-  const provider = new WebTracerProvider();
+  // Initialize tracer provider: try WebTracerProvider, fallback to BasicTracerProvider
+  let provider;
+  try {
+    provider = new WebTracerProvider();
+    if (typeof provider.addSpanProcessor !== 'function') {
+      throw new Error('addSpanProcessor not available');
+    }
+  } catch (err) {
+    log(`WARN: WebTracerProvider unavailable (${err.message}), falling back to BasicTracerProvider`);
+    provider = new BasicTracerProvider();
+  }
   // Set up exporter instance
   const exporterInstance =
     config.exporter === 'otlp'
       ? new OTLPTraceExporter({ url: config.url, headers: config.headers || {} })
       : new ConsoleSpanExporter();
-  // Attach span processor
+  // Attach span processor and register provider
   provider.addSpanProcessor(new SimpleSpanProcessor(exporterInstance));
-  // Register the provider to begin tracing
   provider.register();
   // Obtain the tracer
   tracer = provider.getTracer(config.serviceName || 'demo');
@@ -174,14 +182,28 @@ initApmBtn.addEventListener('click', async () => {
     return;
   }
   let apmConfig;
+  // Try JSON parse first, then YAML
   try {
     apmConfig = JSON.parse(raw);
     log('APM configuration parsed as JSON');
   } catch (e) {
-    const msg = 'Invalid JSON configuration for APM agent';
-    log(`ERROR: ${msg}`);
-    alert(msg);
-    return;
+    log('APM config not valid JSON, trying YAML…');
+    try {
+      let yamlModule = await import('https://esm.sh/js-yaml');
+      if (typeof yamlModule.load !== 'function' && yamlModule.default && typeof yamlModule.default.load === 'function') {
+        yamlModule = yamlModule.default;
+      }
+      if (typeof yamlModule.load !== 'function') {
+        throw new Error('YAML parser missing load()');
+      }
+      apmConfig = yamlModule.load(raw);
+      log('APM configuration parsed as YAML');
+    } catch (e2) {
+      const msg = 'Invalid configuration for APM agent (not JSON or YAML)';
+      log(`ERROR: ${msg}`);
+      alert(msg);
+      return;
+    }
   }
   try {
     const mod = await import('https://esm.sh/@elastic/apm-rum');
