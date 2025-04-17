@@ -1,0 +1,30 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+textarea {
+  width: 100%;
+  max-width: 800px;
+}
+
+.controls {
+  margin-top: 10px;
+}
+
+button {
+  margin-right: 5px;
+}
+
+#log {
+  margin-top: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: #f9f9f9;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+#log p {
+  margin: 0 0 5px;
+}
