@@ -22,7 +22,10 @@
   </script>
   <h1>OpenTelemetry Load Test Demo</h1>
   <div>
-    <label for="config">OTel Config (JSON):</label><br />
+    <label for="corsProxy">CORS Proxy (optional):</label><br />
+    <input id="corsProxy" type="text" placeholder="http://localhost:8080" style="width:80%; max-width:800px;" /><br/>
+    <small>Run the CORS proxy via <code>npm run proxy</code> before starting the simulation.</small><br/>
+    <label for="config">OTel Config (JSON or Collector YAML):</label><br />
     <textarea id="config" rows="10" cols="80">{"serviceName":"demo","exporter":"console","interval":1000,"url":"https://localhost:4318/v1/traces"}</textarea>
   </div>
   <div class="controls">
