@@ -9,7 +9,8 @@ let running = false;
 let configGlobal = {};
 
 const corsProxyEl = document.getElementById('corsProxy');
-const configEl = document.getElementById('config');
+const otelConfigEl = document.getElementById('otelConfig');
+const apmConfigEl = document.getElementById('apmConfig');
 const startBtn = document.getElementById('start');
 const stepBtn = document.getElementById('step');
 const stopBtn = document.getElementById('stop');
@@ -87,7 +88,7 @@ function simulate(type) {
 }
 
 async function start() {
-  const raw = configEl.value.trim();
+  const raw = otelConfigEl.value.trim();
   // Clear previous logs and indicate start
   logEl.innerHTML = '';
   log('Starting simulation…');
@@ -220,9 +221,9 @@ initApmBtn.addEventListener('click', async () => {
   log('Loading APM agent module…');
   let raw;
   try {
-    raw = configEl.value.trim();
+    raw = apmConfigEl.value.trim();
   } catch (e) {
-    log('ERROR: Unable to read configuration');
+    log('ERROR: Unable to read APM agent configuration');
     return;
   }
   let apmConfig;

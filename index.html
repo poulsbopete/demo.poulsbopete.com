@@ -24,9 +24,21 @@
   <div>
     <label for="corsProxy">CORS Proxy (optional):</label><br />
     <input id="corsProxy" type="text" placeholder="http://localhost:8080" style="width:80%; max-width:800px;" /><br/>
-    <small>Run the CORS proxy via <code>npm run proxy</code> before starting the simulation.</small><br/>
-    <label for="config">OTel Config (JSON or Collector YAML):</label><br />
-    <textarea id="config" rows="10" cols="80">{"serviceName":"demo","exporter":"console","interval":1000,"url":"https://localhost:4318/v1/traces"}</textarea>
+    <small>Run the CORS proxy via <code>npm run proxy</code> before starting the simulation.</small>
+  </div>
+  <div>
+    <label for="otelConfig">OTel Config (JSON or Collector YAML):</label><br />
+    <textarea id="otelConfig" rows="10" cols="80">{"serviceName":"demo","exporter":"console","interval":1000,"url":"https://localhost:4318/v1/traces"}</textarea>
+  </div>
+  <div>
+    <label for="apmConfig">APM Agent Config (JSON or YAML):</label><br />
+    <textarea id="apmConfig" rows="8" cols="80">{
+  "serviceName":"demo-frontend",
+  "serverUrl":"http://localhost:8200/intake/v2/rum/events",
+  "active":true,
+  "environment":"development",
+  "logLevel":"debug"
+}</textarea>
   </div>
   <div class="controls">
     <button id="start">Start</button>

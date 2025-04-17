@@ -11,15 +11,26 @@ Run entirely in the browser; no build step required.
    python3 -m http.server 8000
    ```
 2. In your browser, navigate to `http://localhost:8000` (or your chosen host) to load the app.
-3. Paste your OpenTelemetry configuration into the textarea:
+3. In the **CORS Proxy** field, enter your proxy URL if needed (e.g. `http://localhost:8080`).
+4. Paste your OpenTelemetry configuration into the **OTel Config** textarea:
    - You can use a simple JSON snippet (with `serviceName`, `exporter`, `url`, etc.).
    - Or paste a full Collector YAML. The app will extract the first trace pipeline's exporter endpoint and headers automatically.
-4. Click **Start** to begin generating OpenTelemetry spans continuously.
+5. Paste your Elastic APM RUM agent configuration into the **APM Agent Config** textarea (JSON or YAML).  
+   Example:
+   ```json
+   {
+     "serviceName": "demo-frontend",
+     "serverUrl": "http://localhost:8200/intake/v2/rum/events",
+     "active": true,
+     "environment": "development",
+     "logLevel": "debug"
+   }
+   ```
+6. Click **Start** to begin generating OpenTelemetry spans continuously.
    - Note: the browser-based OTLP HTTP simulation requires the target endpoint to support CORS for POST requests. Many managed OTLP endpoints (e.g. Elastic Cloud ingest) do not allow direct browser access.
    - If you see network or CORS errors, you can:
      - Run a local Collector at `http://localhost:4318` and point the exporter URL there.
-     - Or start the included CORS proxy: `npm run proxy` (defaults to http://localhost:8080)
-       and include `"corsProxy": "http://localhost:8080"` in your JSON config.
+     - Or start the included CORS proxy: `npm run proxy` (defaults to http://localhost:8080), ensure it's running before clicking **Start**, and set the **CORS Proxy** field in the UI to `http://localhost:8080`.
 5. Use **Step** to generate a single OpenTelemetry span on demand.
 6. Click **Stop** to end the OpenTelemetry simulation.
 7. Alternatively, click **Init APM** to load and initialize the Elastic APM RUM agent using the JSON configuration. This will expose the agent API as `window.apm` in the browser console.
