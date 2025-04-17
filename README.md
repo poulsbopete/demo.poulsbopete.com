@@ -20,7 +20,7 @@ Run entirely in the browser; no build step required.
    ```json
    {
      "serviceName": "demo-frontend",
-     "serverUrl": "http://localhost:8200/intake/v2/rum/events",
+     "serverUrl": "http://localhost:8200",
      "active": true,
      "environment": "development",
      "logLevel": "debug"
