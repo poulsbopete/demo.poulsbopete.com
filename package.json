@@ -1,0 +1,11 @@
+{
+  "name": "demo-poulsbopete-com",
+  "version": "1.0.0",
+  "description": "Static demo app for OpenTelemetry load testing with optional CORS proxy",
+  "scripts": {
+    "proxy": "node server.js"
+  },
+  "dependencies": {
+    "cors-anywhere": "^0.4.4"
+  }
+}
