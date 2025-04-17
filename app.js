@@ -1,9 +1,9 @@
 // OpenTelemetry JS SDK imports from ESM-friendly CDN
 // OpenTelemetry browser SDK imports via jsDelivr ESM bundles
-import { WebTracerProvider } from 'https://cdn.jsdelivr.net/npm/@opentelemetry/sdk-trace-web/+esm';
-// BasicTracerProvider fallback and exporters from base package
-import { BasicTracerProvider, ConsoleSpanExporter, SimpleSpanProcessor } from 'https://cdn.jsdelivr.net/npm/@opentelemetry/sdk-trace-base/+esm';
-import { OTLPTraceExporter } from 'https://cdn.jsdelivr.net/npm/@opentelemetry/exporter-trace-otlp-http/+esm';
+// OpenTelemetry SDK imports via unpkg.com with ESM support
+import { WebTracerProvider } from 'https://unpkg.com/@opentelemetry/sdk-trace-web@latest?module';
+import { ConsoleSpanExporter, SimpleSpanProcessor } from 'https://unpkg.com/@opentelemetry/sdk-trace-base@latest?module';
+import { OTLPTraceExporter } from 'https://unpkg.com/@opentelemetry/exporter-trace-otlp-http@latest?module';
 // YAML parsing will be loaded dynamically when needed
 
 let tracer;
@@ -26,25 +26,15 @@ function log(message) {
 }
 
 function initTracer(config) {
-  // Initialize tracer provider: prefer WebTracerProvider, fallback to BasicTracerProvider
-  let provider;
-  try {
-    provider = new WebTracerProvider();
-    // ensure API exists
-    if (typeof provider.addSpanProcessor !== 'function') {
-      throw new Error('addSpanProcessor not supported');
-    }
-  } catch (e) {
-    log(`WARN: WebTracerProvider unavailable (${e.message}), falling back to BasicTracerProvider`);
-    provider = new BasicTracerProvider();
-  }
+  // Initialize tracer provider for browser
+  const provider = new WebTracerProvider();
   // Choose exporter instance
-  const exporterInstance =
+  const exporter =
     config.exporter === 'otlp'
       ? new OTLPTraceExporter({ url: config.url, headers: config.headers || {} })
       : new ConsoleSpanExporter();
   // Attach span processor and register provider
-  provider.addSpanProcessor(new SimpleSpanProcessor(exporterInstance));
+  provider.addSpanProcessor(new SimpleSpanProcessor(exporter));
   provider.register();
   // Obtain tracer
   tracer = provider.getTracer(config.serviceName || 'demo');
