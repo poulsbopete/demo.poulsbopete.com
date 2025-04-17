@@ -1,5 +1,5 @@
 import { WebTracerProvider } from 'https://esm.sh/@opentelemetry/sdk-trace-web';
-import { ConsoleSpanExporter, SimpleSpanProcessor, BasicTracerProvider } from 'https://esm.sh/@opentelemetry/sdk-trace-base';
+import { ConsoleSpanExporter, SimpleSpanProcessor } from 'https://esm.sh/@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from 'https://esm.sh/@opentelemetry/exporter-trace-otlp-http';
 // YAML parsing will be loaded dynamically when needed
 
@@ -22,31 +22,18 @@ function log(message) {
 }
 
 function initTracer(config) {
-  // Initialize tracer provider: use WebTracerProvider if available, otherwise fallback
-  let provider;
-  try {
-    provider = new WebTracerProvider();
-    if (typeof provider.addSpanProcessor !== 'function') {
-      throw new Error('WebTracerProvider missing addSpanProcessor');
-    }
-  } catch (err) {
-    log(`WARN: WebTracerProvider unavailable, falling back to BasicTracerProvider (${err.message})`);
-    provider = new BasicTracerProvider();
-  }
-  // Set up exporter
-  let exporterInstance;
-  if (config.exporter === 'otlp') {
-    exporterInstance = new OTLPTraceExporter({
-      url: config.url,
-      headers: config.headers || {},
-    });
-  } else {
-    exporterInstance = new ConsoleSpanExporter();
-  }
-  // Attach span processor and register
+  // Initialize WebTracerProvider for browser
+  const provider = new WebTracerProvider();
+  // Set up exporter instance
+  const exporterInstance =
+    config.exporter === 'otlp'
+      ? new OTLPTraceExporter({ url: config.url, headers: config.headers || {} })
+      : new ConsoleSpanExporter();
+  // Attach span processor
   provider.addSpanProcessor(new SimpleSpanProcessor(exporterInstance));
+  // Register the provider to begin tracing
   provider.register();
-  // Obtain a tracer
+  // Obtain the tracer
   tracer = provider.getTracer(config.serviceName || 'demo');
 }
 
