@@ -71,6 +71,18 @@ function start() {
     }
   }
   let config;
+  // Unwrap top-level Collector wrapper if present
+  if (cfg.config && typeof cfg.config === 'object') {
+    log('Detected top-level config block, using inner config');
+    cfg = cfg.config;
+  } else if (Object.keys(cfg).length === 1) {
+    const rootKey = Object.keys(cfg)[0];
+    const rootVal = cfg[rootKey];
+    if (rootVal && typeof rootVal === 'object' && rootVal.config && typeof rootVal.config === 'object') {
+      log(`Detected wrapper "${rootKey}", using its .config block`);
+      cfg = rootVal.config;
+    }
+  }
   // Detect Collector config with service pipelines and exporters
   if (cfg.service && cfg.service.pipelines && cfg.exporters) {
     const collector = cfg;
