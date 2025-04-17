@@ -1,7 +1,8 @@
 // OpenTelemetry JS SDK imports from ESM-friendly CDN
-import { WebTracerProvider } from 'https://unpkg.com/@opentelemetry/sdk-trace-web?module';
-import { ConsoleSpanExporter, SimpleSpanProcessor } from 'https://cdn.skypack.dev/@opentelemetry/sdk-trace-base';
-import { OTLPTraceExporter } from 'https://cdn.skypack.dev/@opentelemetry/exporter-trace-otlp-http';
+// OpenTelemetry browser SDK imports via jsDelivr ESM bundles
+import { WebTracerProvider } from 'https://cdn.jsdelivr.net/npm/@opentelemetry/sdk-trace-web/+esm';
+import { ConsoleSpanExporter, SimpleSpanProcessor } from 'https://cdn.jsdelivr.net/npm/@opentelemetry/sdk-trace-base/+esm';
+import { OTLPTraceExporter } from 'https://cdn.jsdelivr.net/npm/@opentelemetry/exporter-trace-otlp-http/+esm';
 // YAML parsing will be loaded dynamically when needed
 
 let tracer;

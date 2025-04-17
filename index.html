@@ -34,6 +34,27 @@
   </div>
   <h2>Log</h2>
   <div id="log"></div>
+  <!-- Error logging to UI -->
+  <script>
+    window.addEventListener('error', event => {
+      const logEl = document.getElementById('log');
+      if (logEl) {
+        const p = document.createElement('p');
+        p.textContent = `Error: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`;
+        logEl.appendChild(p);
+      }
+      console.error(event.error || event.message);
+    });
+    window.addEventListener('unhandledrejection', event => {
+      const logEl = document.getElementById('log');
+      if (logEl) {
+        const p = document.createElement('p');
+        p.textContent = `UnhandledRejection: ${event.reason}`;
+        logEl.appendChild(p);
+      }
+      console.error(event.reason);
+    });
+  </script>
   <script type="module" src="app.js"></script>
 </body>
 </html>
