@@ -8,6 +8,7 @@ let intervalIds = [];
 let running = false;
 let configGlobal = {};
 
+const corsProxyEl = document.getElementById('corsProxy');
 const configEl = document.getElementById('config');
 const startBtn = document.getElementById('start');
 const stepBtn = document.getElementById('step');
@@ -54,8 +55,13 @@ async function sendSpan(type) {
       scopeSpans: [{ scope: { name: configGlobal.serviceName }, spans: [span] }]
     }]
   };
+  // Determine fetch endpoint, allow optional CORS proxy
+  const endpoint = configGlobal.corsProxy
+    ? (configGlobal.corsProxy.endsWith('/') ? configGlobal.corsProxy + configGlobal.url : configGlobal.corsProxy + '/' + configGlobal.url)
+    : configGlobal.url;
+  log(`Sending span to ${endpoint}`);
   try {
-    const res = await fetch(configGlobal.url, {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: Object.assign({ 'Content-Type': 'application/json' }, configGlobal.headers || {}),
       body: JSON.stringify(body)
@@ -165,7 +171,16 @@ async function start() {
     config = cfg;
   }
   // Save config for simulation
+  // Save config for simulation
   configGlobal = config;
+  // Read optional CORS proxy from UI
+  const cp = corsProxyEl.value.trim();
+  if (cp) {
+    configGlobal.corsProxy = cp;
+    log(`Using CORS proxy: ${cp}`);
+  } else {
+    delete configGlobal.corsProxy;
+  }
   log(`Configuration set: serviceName=${config.serviceName}, exporter=${config.exporter || 'console'}, url=${config.url || ''}`);
   running = true;
   startBtn.disabled = true;
@@ -225,8 +240,8 @@ initApmBtn.addEventListener('click', async () => {
       if (typeof yamlModule.load !== 'function') {
         throw new Error('YAML parser missing load()');
       }
-      apmConfig = yamlModule.load(raw);
-      log('APM configuration parsed as YAML');
+    apmConfig = yamlModule.load(raw);
+    log('APM configuration parsed as YAML');
     } catch (e2) {
       const msg = 'Invalid configuration for APM agent (not JSON or YAML)';
       log(`ERROR: ${msg}`);
@@ -234,7 +249,24 @@ initApmBtn.addEventListener('click', async () => {
       return;
     }
   }
+  // Optionally proxy APM server through CORS proxy
+  {
+    const cp = corsProxyEl.value.trim();
+    if (cp && apmConfig.serverUrl) {
+      const urlNoProto = apmConfig.serverUrl.replace(/^https?:\/\//, '');
+      apmConfig.serverUrl = cp.endsWith('/') ? cp + urlNoProto : cp + '/' + urlNoProto;
+      log(`APM server URL proxied via: ${apmConfig.serverUrl}`);
+    }
+  }
   try {
+    // Apply CORS proxy for APM server if set in UI
+    const cp = corsProxyEl.value.trim();
+    if (cp && apmConfig.serverUrl) {
+      // ensure proper proxy prefix and strip protocol
+      const urlNoProto = apmConfig.serverUrl.replace(/^https?:\/+/, '');
+      apmConfig.serverUrl = cp.endsWith('/') ? cp + urlNoProto : cp + '/' + urlNoProto;
+      log(`APM server URL proxied via: ${apmConfig.serverUrl}`);
+    }
     const mod = await import('https://esm.sh/@elastic/apm-rum');
     const agentModule = mod.init ? mod : (mod.default || {});
     const apmInit = agentModule.init;
