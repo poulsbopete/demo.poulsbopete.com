@@ -254,9 +254,10 @@ initApmBtn.addEventListener('click', async () => {
     // Apply CORS proxy for APM server if set in UI
     const cp = corsProxyEl.value.trim();
     if (cp && apmConfig.serverUrl) {
-      // ensure proper proxy prefix and strip protocol
-      const urlNoProto = apmConfig.serverUrl.replace(/^https?:\/+/, '');
-      apmConfig.serverUrl = cp.endsWith('/') ? cp + urlNoProto : cp + '/' + urlNoProto;
+      // ensure single slash between proxy and target URL (including protocol)
+      const proxy = cp.replace(/\/+$/, '');
+      const target = apmConfig.serverUrl.replace(/^\/+/, '');
+      apmConfig.serverUrl = `${proxy}/${target}`;
       log(`APM server URL proxied via: ${apmConfig.serverUrl}`);
     }
     const mod = await import('https://esm.sh/@elastic/apm-rum');
