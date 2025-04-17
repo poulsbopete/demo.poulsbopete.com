@@ -1,5 +1,7 @@
-import { BasicTracerProvider, ConsoleSpanExporter, SimpleSpanProcessor } from 'https://esm.sh/@opentelemetry/sdk-trace-base';
-import { OTLPTraceExporter } from 'https://esm.sh/@opentelemetry/exporter-trace-otlp-http';
+// OpenTelemetry JS SDK imports from ESM-friendly CDN
+import { WebTracerProvider } from 'https://unpkg.com/@opentelemetry/sdk-trace-web?module';
+import { ConsoleSpanExporter, SimpleSpanProcessor } from 'https://cdn.skypack.dev/@opentelemetry/sdk-trace-base';
+import { OTLPTraceExporter } from 'https://cdn.skypack.dev/@opentelemetry/exporter-trace-otlp-http';
 // YAML parsing will be loaded dynamically when needed
 
 let tracer;
@@ -22,8 +24,8 @@ function log(message) {
 }
 
 function initTracer(config) {
-  // Initialize tracer provider for browser simulation
-  const provider = new BasicTracerProvider();
+  // Initialize tracer provider for browser
+  const provider = new WebTracerProvider();
   // Choose exporter instance
   const exporterInstance = config.exporter === 'otlp'
     ? new OTLPTraceExporter({ url: config.url, headers: config.headers || {} })
