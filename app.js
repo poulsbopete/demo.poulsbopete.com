@@ -13,6 +13,7 @@ const stepBtn = document.getElementById('step');
 const stopBtn = document.getElementById('stop');
 const statusEl = document.getElementById('status');
 const logEl = document.getElementById('log');
+const initApmBtn = document.getElementById('initApm');
 
 function log(message) {
   const p = document.createElement('p');
@@ -161,6 +162,41 @@ startBtn.addEventListener('click', () => {
     log(`ERROR: ${err.message}`);
     console.error(err);
   });
+});
+// Initialize Elastic APM RUM agent on demand
+initApmBtn.addEventListener('click', async () => {
+  log('Loading APM agent module…');
+  let raw;
+  try {
+    raw = configEl.value.trim();
+  } catch (e) {
+    log('ERROR: Unable to read configuration');
+    return;
+  }
+  let apmConfig;
+  try {
+    apmConfig = JSON.parse(raw);
+    log('APM configuration parsed as JSON');
+  } catch (e) {
+    const msg = 'Invalid JSON configuration for APM agent';
+    log(`ERROR: ${msg}`);
+    alert(msg);
+    return;
+  }
+  try {
+    const mod = await import('https://esm.sh/@elastic/apm-rum');
+    const agentModule = mod.init ? mod : (mod.default || {});
+    const apmInit = agentModule.init;
+    if (typeof apmInit !== 'function') {
+      throw new Error('init() function not found in APM module');
+    }
+    const apm = apmInit(apmConfig);
+    window.apm = apm;
+    log('APM agent initialized');
+  } catch (err) {
+    log(`ERROR loading APM agent: ${err.message}`);
+    console.error(err);
+  }
 });
 stepBtn.addEventListener('click', step);
 stopBtn.addEventListener('click', stop);

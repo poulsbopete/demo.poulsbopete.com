@@ -13,10 +13,11 @@ Run entirely in the browser; no build step required.
 3. Paste your OpenTelemetry configuration into the textarea:
    - You can use a simple JSON snippet (with `serviceName`, `exporter`, `url`, etc.).
    - Or paste a full Collector YAML. The app will extract the first trace pipeline's exporter endpoint and headers automatically.
-4. Click **Start** to begin generating spans continuously.
-5. Use **Step** to generate a single span on demand.
-6. Click **Stop** to end the simulation.
-7. View simulation logs in the “Log” section below the controls. For exporter output or JS errors, open your browser’s developer console (F12).
+4. Click **Start** to begin generating OpenTelemetry spans continuously.
+5. Use **Step** to generate a single OpenTelemetry span on demand.
+6. Click **Stop** to end the OpenTelemetry simulation.
+7. Alternatively, click **Init APM** to load and initialize the Elastic APM RUM agent using the JSON configuration. This will expose the agent API as `window.apm` in the browser console.
+8. View simulation logs in the “Log” section below the controls. For exporter output or JS errors, open your browser’s developer console (F12).
 
 ## Files
 - `index.html` — main page UI
