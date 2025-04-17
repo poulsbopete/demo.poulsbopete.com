@@ -33,10 +33,12 @@ function makeRandomId(bytes) {
 // send a single span via OTLP HTTP
 async function sendSpan(type) {
   const nowMs = Date.now();
+  // Use integer jitter to avoid fractional BigInt conversion
+  const jitterMs = Math.floor(Math.random() * 500);
   const traceId = makeRandomId(16);
   const spanId = makeRandomId(8);
   const startTime = BigInt(nowMs) * BigInt(1e6);
-  const endTime = BigInt(nowMs + Math.random() * 500) * BigInt(1e6);
+  const endTime = BigInt(nowMs + jitterMs) * BigInt(1e6);
   const span = {
     traceId,
     spanId,
