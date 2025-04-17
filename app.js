@@ -1,7 +1,7 @@
 import { WebTracerProvider } from 'https://esm.sh/@opentelemetry/sdk-trace-web';
 import { ConsoleSpanExporter, SimpleSpanProcessor } from 'https://esm.sh/@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from 'https://esm.sh/@opentelemetry/exporter-trace-otlp-http';
-import { load } from 'https://esm.sh/js-yaml';
+// YAML parsing will be loaded dynamically when needed
 
 let tracer;
 let intervalIds = [];
@@ -45,7 +45,7 @@ function simulate(type) {
   }, Math.random() * 500);
 }
 
-function start() {
+async function start() {
   const raw = configEl.value.trim();
   // Clear previous logs and indicate start
   logEl.innerHTML = '';
@@ -59,13 +59,24 @@ function start() {
     log('Configuration parsed as JSON');
   } catch (e1) {
     log('Configuration not valid JSON, trying YAML…');
+    let yamlModule;
     try {
-      cfg = load(raw);
+      yamlModule = await import('https://esm.sh/js-yaml');
+      log('YAML parser module loaded');
+      // Support named or default export
+      if (typeof yamlModule.load !== 'function' && yamlModule.default && typeof yamlModule.default.load === 'function') {
+        yamlModule = yamlModule.default;
+      }
+      if (typeof yamlModule.load !== 'function') {
+        throw new Error('YAML parser does not have a load() function');
+      }
+      cfg = yamlModule.load(raw);
       parsedAs = 'YAML';
       log('Configuration parsed as YAML');
     } catch (e2) {
       const msg = 'Invalid JSON or YAML configuration';
       log(`ERROR: ${msg}`);
+      console.error(e2);
       alert(msg);
       return;
     }
@@ -144,6 +155,12 @@ function stop() {
   statusEl.textContent = 'Stopped';
 }
 
-startBtn.addEventListener('click', start);
+// Hook start with async error handling
+startBtn.addEventListener('click', () => {
+  start().catch(err => {
+    log(`ERROR: ${err.message}`);
+    console.error(err);
+  });
+});
 stepBtn.addEventListener('click', step);
 stopBtn.addEventListener('click', stop);
